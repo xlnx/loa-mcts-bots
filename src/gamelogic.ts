@@ -163,11 +163,14 @@ export class GameLogic {
 					}
 				}
 
-				const { x0, y0, x1, y1 } = Object.assign({
-					x0: -1, y0: -1, x1: -1, y1: -1
-				}, bot[turn].makeMove(board))
+				bot[turn].makeMove(board).then(res => {
 
-				this.makeMove(x0, y0, x1, y1)
+					const { x0, y0, x1, y1 } = Object.assign({
+						x0: -1, y0: -1, x1: -1, y1: -1
+					}, res)
+					this.makeMove(x0, y0, x1, y1)
+
+				})
 
 			}, 0)
 

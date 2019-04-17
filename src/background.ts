@@ -34,6 +34,7 @@ export class Background extends Actor {
 
 		const { x, y } = this.origin
 
+		this.x = -Game.drawWidth - 2 * this.texture.width
 		this.y = this.y - delta * 1e-2
 		// this.x = x - 20
 

@@ -3,13 +3,17 @@ import { UI } from "../uiglobal";
 
 export class IdiotBot extends Bot {
 
-	makeMove(board: number[]) {
+	makeMove(board: number[]): Promise<{ x0: number, y0: number, x1: number, y1: number }> {
 
-		const moves = UI.Grid.callAllMoves(this.turn)
+		return new Promise((resolve, reject) => {
 
-		const idx = Math.floor(Math.random() * moves.length) % moves.length
+			const moves = UI.Grid.callAllMoves(this.turn)
 
-		return moves[idx]
+			const idx = Math.floor(Math.random() * moves.length) % moves.length
+
+			resolve(moves[idx])
+
+		})
 
 	}
 
