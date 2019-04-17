@@ -11,7 +11,9 @@ export class IdiotBot extends Bot {
 
 			const idx = Math.floor(Math.random() * moves.length) % moves.length
 
-			resolve(moves[idx])
+			// resolve(moves[idx])
+
+			setTimeout(() => { resolve(moves[idx]) }, 1000 * 100)
 
 		})
 

@@ -105,13 +105,6 @@ export class GameLogic {
 
 	}
 
-	static playerWins(turn: number) {
-
-		timer.cancel()
-		timer = undefined
-
-	}
-
 	static updateTime() {
 
 		time -= 1
@@ -128,7 +121,10 @@ export class GameLogic {
 
 		if (time == 0) {
 
-			this.playerWins(1 - turn)
+			UI.Stat.board.text = `${turn == PieceType.Black ? "黑" : "白"}方超时，` +
+				`${turn == PieceType.White ? "黑" : "白"}方胜利`
+
+			this.gameOver()
 
 		}
 
