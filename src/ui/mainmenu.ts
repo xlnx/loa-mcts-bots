@@ -1,7 +1,7 @@
 import { Actor, Engine, Vector, EasingFunctions, GameEvent, Color, Label, TextAlign } from "excalibur";
-import { Resources, Config, Game } from "./global";
-import { UI } from "./uiglobal";
-import { GameLogic } from "./gamelogic";
+import { Resources, Config, Game } from "../glob/global";
+import { UI } from "../glob/uiglobal";
+import { GameLogic } from "../glob/gamelogic";
 import { Dropdown } from "./dropdown";
 
 export class MenuButton extends Actor {

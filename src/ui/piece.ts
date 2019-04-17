@@ -1,5 +1,5 @@
 import { Color, Engine, Sprite, Actor } from "excalibur";
-import { Config, Resources, Game, Palette } from "./global";
+import { Config, Resources, Game, Palette } from "../glob/global";
 import { Cell } from "./grid";
 
 export enum PieceType {

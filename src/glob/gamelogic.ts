@@ -1,7 +1,7 @@
-import { Cell } from "./grid";
+import { Cell } from "../ui/grid";
 import { UI } from "./uiglobal";
 import { Config } from "./global";
-import { PieceType } from "./piece";
+import { PieceType } from "../ui/piece";
 import { Timer } from "./timer";
 import { Bot } from "./bot";
 

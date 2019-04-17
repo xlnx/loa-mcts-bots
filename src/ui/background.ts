@@ -1,5 +1,5 @@
 import { Actor, Vector, Texture, Engine } from "excalibur";
-import { Game } from "./global";
+import { Game } from "../glob/global";
 
 export class Background extends Actor {
 

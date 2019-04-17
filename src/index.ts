@@ -1,8 +1,8 @@
 import { Loader, Vector } from "excalibur";
-import { Config, Resources, Game } from "./global";
-import { Background } from "./background";
-import { UI } from "./uiglobal";
-import { GameLogic } from "./gamelogic";
+import { Config, Resources, Game } from "./glob/global";
+import { Background } from "./ui/background";
+import { UI } from "./glob/uiglobal";
+import { GameLogic } from "./glob/gamelogic";
 
 const loader = new Loader()
 for (const rc in Resources) {
@@ -10,6 +10,7 @@ for (const rc in Resources) {
 }
 
 import "./bots/idiot"
+import "./bots/plain"
 
 Game.start(loader).then(() => {
 

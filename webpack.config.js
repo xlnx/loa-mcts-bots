@@ -29,7 +29,7 @@ var config = {
 	devtool: "source-map",
 	context: path.resolve("./"),
 	entry: {
-		app: "./src/index.ts"
+		app: "./src/bootstrap.js"
 	},
 	output: {
 		path: path.resolve("./dist"),
@@ -50,27 +50,11 @@ var config = {
 				test: /\.tsx?$/,
 				exclude: /\/node_modules\//,
 				use: ["awesome-typescript-loader", "source-map-loader"]
-			},
-			// {
-			// 	test: /\.(js|ts)$/,
-			// 	loader: "babel-loader",
-			// 	exclude: /\/node_modules\//
-			// },
-			// {
-			// 	test: /\.html$/,
-			// 	include: path.join(__dirname, 'src/views'),
-			// 	// loader: "raw-loader" // loaders: ['raw-loader'] is also perfectly acceptable.
-			// 	use: {
-			// 		loader: 'html-loader',
-			// 		options: {
-			// 			interpolate: true
-			// 		}
-			// 	}
-			// }
+			}
 		]
 	},
 	resolve: {
-		extensions: [".ts", ".js", ".js", ".jsx"]
+		extensions: [".ts", ".js", ".js", ".jsx", ".wasm", ".json"]
 	},
 	plugins: plugins,
 	devServer: {

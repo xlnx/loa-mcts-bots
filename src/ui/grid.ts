@@ -1,7 +1,7 @@
-import { Config, Resources, Game } from "./global";
+import { Config, Resources, Game } from "../glob/global";
 import { Piece, PieceType } from "./piece";
 import { Vector, Actor, Sprite, EasingFunctions } from "excalibur";
-import { GameLogic } from "./gamelogic";
+import { GameLogic } from "../glob/gamelogic";
 
 const Dim = 8
 
@@ -460,26 +460,26 @@ export class Grid extends Actor {
 			const b = PieceType.Black
 			const e: undefined = undefined
 
-			const board = [
-				e, b, b, b, b, b, b, e,
-				w, e, e, e, e, e, e, w,
-				w, e, e, e, e, e, e, w,
-				w, e, e, e, e, e, e, w,
-				w, e, e, e, e, e, e, w,
-				w, e, e, e, e, e, e, w,
-				w, e, e, e, e, e, e, w,
-				e, b, b, b, b, b, b, e,
-			]
 			// const board = [
-			// 	e, e, e, e, e, e, e, e,
-			// 	e, e, e, e, e, e, e, e,
-			// 	e, e, e, w, e, b, w, e,
-			// 	b, b, e, e, e, e, e, w,
-			// 	e, e, w, e, e, e, e, w,
-			// 	e, e, e, e, b, e, e, w,
-			// 	w, e, e, e, e, w, e, e,
-			// 	e, e, b, e, w, e, e, w,
+			// 	e, b, b, b, b, b, b, e,
+			// 	w, e, e, e, e, e, e, w,
+			// 	w, e, e, e, e, e, e, w,
+			// 	w, e, e, e, e, e, e, w,
+			// 	w, e, e, e, e, e, e, w,
+			// 	w, e, e, e, e, e, e, w,
+			// 	w, e, e, e, e, e, e, w,
+			// 	e, b, b, b, b, b, b, e,
 			// ]
+			const board = [
+				e, e, e, e, e, e, e, e,
+				e, e, e, e, e, e, e, e,
+				e, e, e, w, e, b, w, e,
+				b, b, e, e, e, e, e, w,
+				e, e, w, e, e, e, e, w,
+				e, e, e, e, b, e, e, w,
+				w, e, e, e, e, w, e, e,
+				e, e, b, e, w, e, e, w,
+			]
 
 			for (let i = 0; i != Dim; ++i) {
 				for (let j = 0; j != Dim; ++j) {

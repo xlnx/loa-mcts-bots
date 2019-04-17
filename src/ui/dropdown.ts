@@ -1,5 +1,5 @@
 import { Actor, Engine, Color, Label, TextAlign } from "excalibur";
-import { Config, Game } from "./global";
+import { Config, Game } from "../glob/global";
 
 export class DrowdownItem extends Actor {
 

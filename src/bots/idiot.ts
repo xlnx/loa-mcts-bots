@@ -1,5 +1,5 @@
-import { Bot } from "../bot";
-import { UI } from "../uiglobal";
+import { Bot } from "../glob/bot";
+import { UI } from "../glob/uiglobal";
 
 export class IdiotBot extends Bot {
 

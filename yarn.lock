@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@types/node@^11.13.4":
+  version "11.13.4"
+  resolved "http://registry.npm.taobao.org/@types/node/download/@types/node-11.13.4.tgz#f83ec3c3e05b174b7241fadeb6688267fe5b22ca"
+  integrity sha1-+D7Dw+BbF0tyQfretmiCZ/5bIso=
+
 "@webassemblyjs/ast@1.8.5":
   version "1.8.5"
   resolved "http://registry.npm.taobao.org/@webassemblyjs/ast/download/@webassemblyjs/ast-1.8.5.tgz#51b1c5fe6576a34953bf4b253df9f0d490d9e359"
@@ -604,7 +609,7 @@ camelcase@^5.0.0:
   resolved "http://registry.npm.taobao.org/camelcase/download/camelcase-5.3.1.tgz#e3c9b31569e106811df242f715725a1f4c494320"
   integrity sha1-48mzFWnhBoEd8kL3FXJaH0xJQyA=
 
-chalk@^2.0.1, chalk@^2.1.0, chalk@^2.4.0, chalk@^2.4.1:
+chalk@^2.0.1, chalk@^2.1.0, chalk@^2.3.0, chalk@^2.4.0, chalk@^2.4.1:
   version "2.4.2"
   resolved "http://registry.npm.taobao.org/chalk/download/chalk-2.4.2.tgz#cd42541677a54333cf541a49108c1432b44c9424"
   integrity sha1-zUJUFnelQzPPVBpJEIwUMrRMlCQ=
@@ -2265,7 +2270,7 @@ loader-utils@^0.2.16:
     json5 "^0.5.0"
     object-assign "^4.0.1"
 
-loader-utils@^1.1.0:
+loader-utils@^1.0.2, loader-utils@^1.1.0:
   version "1.2.3"
   resolved "http://registry.npm.taobao.org/loader-utils/download/loader-utils-1.2.3.tgz#1ff5dc6911c9f0a062531a4c04b609406108c2c7"
   integrity sha1-H/XcaRHJ8KBiUxpMBLYJQGEIwsc=
@@ -3371,7 +3376,7 @@ selfsigned@^1.10.4:
   dependencies:
     node-forge "0.7.5"
 
-semver@^5.3.0, semver@^5.5.0, semver@^5.6.0:
+semver@^5.0.1, semver@^5.3.0, semver@^5.5.0, semver@^5.6.0:
   version "5.7.0"
   resolved "http://registry.npm.taobao.org/semver/download/semver-5.7.0.tgz#790a7cf6fea5459bac96110b29b60412dc8ff96b"
   integrity sha1-eQp89v6lRZuslhELKbYEEtyP+Ws=
@@ -3841,6 +3846,17 @@ toposort@^1.0.0:
   version "1.0.7"
   resolved "http://registry.npm.taobao.org/toposort/download/toposort-1.0.7.tgz#2e68442d9f64ec720b8cc89e6443ac6caa950029"
   integrity sha1-LmhELZ9k7HILjMieZEOsbKqVACk=
+
+ts-loader@^5.3.3:
+  version "5.3.3"
+  resolved "http://registry.npm.taobao.org/ts-loader/download/ts-loader-5.3.3.tgz#8b4af042e773132d86b3c99ef0acf3b4d325f473"
+  integrity sha1-i0rwQudzEy2Gs8me8KzztNMl9HM=
+  dependencies:
+    chalk "^2.3.0"
+    enhanced-resolve "^4.0.0"
+    loader-utils "^1.0.2"
+    micromatch "^3.1.4"
+    semver "^5.0.1"
 
 tslib@^1.9.0:
   version "1.9.3"

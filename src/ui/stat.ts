@@ -1,5 +1,5 @@
 import { Actor, Label, TextAlign, Color } from "excalibur";
-import { Game } from "./global";
+import { Game } from "../glob/global";
 
 export class Stat extends Actor {
 
