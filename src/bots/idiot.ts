@@ -18,3 +18,5 @@ export class IdiotBot extends Bot {
 	}
 
 }
+
+Bot.register("idiot bot", IdiotBot)

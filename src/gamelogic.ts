@@ -1,12 +1,11 @@
 import { Cell } from "./grid";
 import { UI } from "./uiglobal";
 import { Config } from "./global";
-import { PieceType, Piece } from "./piece";
+import { PieceType } from "./piece";
 import { Timer } from "./timer";
-import { IdiotBot } from "./bots/idiot";
+import { Bot } from "./bot";
 
-let BotProvider = IdiotBot
-
+let hovered: Cell | undefined
 let current: Cell | undefined
 let time: number = 0
 let gtime: number[] = [0, 0]
@@ -14,40 +13,77 @@ let turn: number = PieceType.Black
 let timer!: Timer
 let started: boolean = false
 
-let pc!: boolean[]
-let bot = [new BotProvider(0), new BotProvider(1)]
+let pc: boolean[] = new Array(2)
+let bot: Bot[] = new Array(2)
 let accTime: number = 0
+let id: number = 0
 
 export class GameLogic {
 
 	static init() {
 
-		// new Timer()
+		const bots = Bot.list()
+
+		for (const player of UI.Menu.player) {
+
+			player.addOptions("Player", ...bots)
+
+		}
 
 	}
 
-	static start(p1: boolean = false, p2: boolean = false) {
+	static start() {
+
+		started = false
+
+		this.cancelTimer()
 
 		console.clear()
 
-		pc = [p1, p2]
-
 		current = undefined
-
-		started = true
-
+		time = Config.Step
 		gtime = [0, 0]
+		turn = PieceType.Black
+		started = true
+		id += 1
+
+		for (let i of [0, 1]) {
+
+			const player = UI.Menu.player[i].getValue()
+
+			if (pc[i] = player != `Player`) {
+				bot[i] = new (Bot.get(player)!)(i)
+			}
+
+		}
+
+		this.hoverCell(undefined)
+
+		if (!UI.Grid.isReady()) {
+
+			const thisId = id
+
+			setTimeout(() => {
+
+				if (id == thisId) {
+
+					this.setTimer()
+
+					this.checkBotMove()
+				}
+
+			}, Config.MoveAnimTime)
+
+		} else {
+
+			this.setTimer()
+
+			this.checkBotMove()
+
+		}
 
 		UI.Grid.init()
-
-		turn = PieceType.Black
-		time = Config.Step
-
 		UI.Stat.turn.text = turn == PieceType.Black ? "黑" : "白"
-
-		this.setTimer()
-
-		this.checkBotMove()
 
 	}
 
@@ -141,6 +177,8 @@ export class GameLogic {
 
 		this.cancelTimer()
 
+		// console.log("")
+
 	}
 
 	static checkBotMove() {
@@ -149,28 +187,38 @@ export class GameLogic {
 
 		if (started && pc[turn]) {
 
+			const thisId = id
+
 			setTimeout(() => {
 
-				const board = new Array(64).fill(-1)
+				if (thisId == id) {
 
-				// for (let k = 0; k < 2; ++k) {
-				for (let i = 0; i < 8; ++i) {
-					for (let j = 0; j < 8; ++j) {
-						const p = UI.Grid.getCell(i, j).piece
-						if (!!p) {
-							board[i + j * 8] = p.type
+					const board = new Array(64).fill(-1)
+
+					// for (let k = 0; k < 2; ++k) {
+					for (let i = 0; i < 8; ++i) {
+						for (let j = 0; j < 8; ++j) {
+							const p = UI.Grid.getCell(i, j).piece
+							if (!!p) {
+								board[i + j * 8] = p.type
+							}
 						}
 					}
+
+					bot[turn].makeMove(board).then(res => {
+
+						if (thisId == id) {
+
+							const { x0, y0, x1, y1 } = Object.assign({
+								x0: -1, y0: -1, x1: -1, y1: -1
+							}, res)
+							this.makeMove(x0, y0, x1, y1)
+
+						}
+
+					})
+
 				}
-
-				bot[turn].makeMove(board).then(res => {
-
-					const { x0, y0, x1, y1 } = Object.assign({
-						x0: -1, y0: -1, x1: -1, y1: -1
-					}, res)
-					this.makeMove(x0, y0, x1, y1)
-
-				})
 
 			}, 0)
 
@@ -262,9 +310,13 @@ export class GameLogic {
 
 			}
 
+			const thisId = id
+
 			setTimeout(() => {
 
-				this.checkBotMove()
+				if (thisId == id) {
+					this.checkBotMove()
+				}
 
 			}, Config.MoveAnimTime)
 
@@ -289,7 +341,7 @@ export class GameLogic {
 
 		}
 
-		this.removeHightlightCandidate()
+		this.hoverCell(hovered)
 
 	}
 
@@ -330,23 +382,33 @@ export class GameLogic {
 
 	static hoverCell(cell: Cell) {
 
-		if (!current || !current.piece) {
+		if (hovered = cell) {
 
-			if (started && !!cell.piece && cell.piece.type == turn && this.shouldMove()) {
+			if (!current || !current.piece) {
 
-				this.highlightCandidate(cell)
+				if (started && !!cell.piece && cell.piece.type == turn && this.shouldMove()) {
 
-			} else {
+					this.highlightCandidate(cell)
 
-				this.removeHightlightCandidate()
+				} else {
+
+					this.removeHightlightCandidate()
+
+				}
 
 			}
+
+		} else {
+
+			this.removeHightlightCandidate()
 
 		}
 
 	}
 
 	static unhoverCell(cell: Cell) {
+
+		if (hovered == cell) hovered = undefined
 
 	}
 

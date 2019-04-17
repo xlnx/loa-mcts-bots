@@ -186,6 +186,12 @@ export class Grid extends Actor {
 
 	}
 
+	isReady() {
+
+		return this.ready
+
+	}
+
 	update() {
 
 		this.container.x = this.getLeft()

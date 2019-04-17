@@ -1,8 +1,8 @@
-import { Actor, Engine, Vector, EasingFunctions, Sprite, Util, GameEvent, Color, Label, TextAlign } from "excalibur";
+import { Actor, Engine, Vector, EasingFunctions, GameEvent, Color, Label, TextAlign } from "excalibur";
 import { Resources, Config, Game } from "./global";
 import { UI } from "./uiglobal";
-import { Action } from "excalibur/dist/Actions/Action";
 import { GameLogic } from "./gamelogic";
+import { Dropdown } from "./dropdown";
 
 export class MenuButton extends Actor {
 
@@ -18,6 +18,7 @@ export class MenuButton extends Actor {
 		label.fontSize = 16
 		label.opacity = 0.8
 		label.textAlign = TextAlign.Center
+		label.y = 10
 		this.label = label
 
 		this.opacity = 0.6
@@ -25,7 +26,7 @@ export class MenuButton extends Actor {
 		// this.scale.setTo(Util.clamp(Config.Scale.x, 0, 1),
 		// 	Util.clamp(Config.Scale.y, 0, 1))
 
-		this.anchor.setTo(.5, .7)
+		// this.anchor.setTo(.5, .7)
 
 		// this.addDrawing(sprite)
 
@@ -34,28 +35,23 @@ export class MenuButton extends Actor {
 
 	}
 
-	// draw(ctx: CanvasRenderingContext2D, delta: number) {
-
-	// 	this.label.draw(ctx, delta)
-	// 	this.debugDraw(ctx)
-	// }
-
 }
 
 export class MainMenu extends Actor {
 
 	private static LogoPos = new Vector(0, 300)
-	private static StandardButtonPos = new Vector(42, 170 + Config.MenuButton.Height + 20)
+	private static StandardButtonPos = new Vector(42, 150 + Config.MenuButton.Height + 20)
 
 	private logo!: Actor
 
-	onInitialize(engine: Engine) {
+	public readonly player: Dropdown[] = []
 
-		super.onInitialize(engine)
+	constructor() {
+
+		super()
 
 		this.color = new Color(0, 0, 0)
 		this.opacity = 0.6
-		this.z = -50
 		this.anchor.setTo(.5, 0)
 
 		this.logo = new Actor(this.x, this.getTop() - MainMenu.LogoPos.y - 50)
@@ -67,17 +63,9 @@ export class MainMenu extends Actor {
 
 		// Game.add(this.logo)
 
-		Game.add(new MenuButton("Bot/Bot",
-			() => GameLogic.start(true, true),
-			this.x + 120, this.y + MainMenu.StandardButtonPos.y))
-
-		Game.add(new MenuButton("Player/Bot",
-			() => GameLogic.start(false, true),
+		Game.add(new MenuButton("Start",
+			() => GameLogic.start(),
 			this.x, this.y + MainMenu.StandardButtonPos.y))
-
-		Game.add(new MenuButton("Player/Player",
-			() => GameLogic.start(false, false),
-			this.x - 120, this.y + MainMenu.StandardButtonPos.y))
 
 		this.logo.actions
 			.easeTo(
@@ -85,11 +73,21 @@ export class MainMenu extends Actor {
 				650, EasingFunctions.EaseInOutQuad
 			)
 
-		// this.button.actions
-		// 	.easeTo(
-		// 		this.x, this.y + MainMenu.StandardButtonPos.y,
-		// 		650, EasingFunctions.EaseInOutQuad
-		// 	)
+		this.player[0] = new Dropdown(
+			this.x - 110, this.y + MainMenu.StandardButtonPos.y)
+		this.player[1] = new Dropdown(
+			this.x + 110, this.y + MainMenu.StandardButtonPos.y)
+
+		Game.add(this.player[0])
+		Game.add(this.player[1])
+
+	}
+
+	onInitialize(engine: Engine) {
+
+		super.onInitialize(engine)
+
+		this.z = -50
 
 	}
 

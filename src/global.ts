@@ -13,6 +13,13 @@ export const Config = {
 		Width: 100,
 		Height: 48
 	},
+	Dropdown: {
+		Width: 100,
+		Height: 48
+	},
+	DropdownItem: {
+		Height: 24
+	},
 	Step: 60,
 	MoveAnimTime: 350
 }
