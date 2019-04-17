@@ -2,6 +2,20 @@
 
 ![](doc/cover.png)
 
+# 关于LOA
+
+* [Lines of Action - Wikipedia](https://en.wikipedia.org/wiki/Lines_of_Action)
+* [How to play Lines of Action](https://www.youtube.com/watch?v=Nt0hQo0BBLg)
+
+# 运行
+
+```bash
+$ git clone # ...
+$ cd # ..
+$ yarn install
+$ yarn start # localhost:5140
+```
+
 # Bot接口
 
 ```typescript
@@ -29,6 +43,8 @@ board = [
 	-1, -1,  0, -1,  1, -1, -1,  1,
 ]
 ```
+
+* 输出：from `(x0, y0)` to `(x1, y1)`，棋盘左上角为`(0, 0)`。
 
 # Bot部署
 
