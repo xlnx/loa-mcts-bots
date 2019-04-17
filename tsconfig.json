@@ -9,6 +9,7 @@
 		"experimentalDecorators": true,
 		"lib": [
 			"es2015",
+			"esnext",
 			"dom"
 		],
 		"noImplicitAny": true,

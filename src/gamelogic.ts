@@ -28,6 +28,8 @@ export class GameLogic {
 
 	static start(p1: boolean = false, p2: boolean = false) {
 
+		console.clear()
+
 		pc = [p1, p2]
 
 		current = undefined
@@ -149,7 +151,21 @@ export class GameLogic {
 
 			setTimeout(() => {
 
-				const { x0, y0, x1, y1 } = bot[turn].makeMove([])
+				const board = new Array(64).fill(-1)
+
+				// for (let k = 0; k < 2; ++k) {
+				for (let i = 0; i < 8; ++i) {
+					for (let j = 0; j < 8; ++j) {
+						const p = UI.Grid.getCell(i, j).piece
+						if (!!p) {
+							board[i + j * 8] = p.type
+						}
+					}
+				}
+
+				const { x0, y0, x1, y1 } = Object.assign({
+					x0: -1, y0: -1, x1: -1, y1: -1
+				}, bot[turn].makeMove(board))
 
 				this.makeMove(x0, y0, x1, y1)
 
@@ -172,6 +188,11 @@ export class GameLogic {
 		UI.Stat.board.text = ""
 
 		if (UI.Grid.makeMove(x0, y0, x1, y1)) {
+
+			console.log(`%c  %c (${x0}, ${y0}) => (${x1}, ${y1})`,
+				`background: ${turn == PieceType.Black ? "#75a" : "#0ac"}`,
+				`background: #fff; color: #000`
+			)
 
 			gtime[turn] += (new Date().getTime() - accTime) / 1000
 			accTime = undefined
@@ -246,7 +267,22 @@ export class GameLogic {
 
 		} else {
 
-			UI.Stat.board.text = `非法棋步`
+			console.log(`%c  %c (${x0}, ${y0}) => (${x1}, ${y1})`,
+				`background: ${turn == PieceType.Black ? "#75a" : "#0ac"}`,
+				`background: #fff; color: #f00`
+			)
+
+			if (pc[turn]) {
+
+				UI.Stat.board.text = `非法棋步，${turn == PieceType.White ? "黑" : "白"}方胜利`
+
+				this.gameOver()
+
+			} else {
+
+				UI.Stat.board.text = `非法棋步`
+
+			}
 
 		}
 
