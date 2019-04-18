@@ -9,6 +9,8 @@ export class PlainBot extends Bot {
 
 			const res = my_plain_solution(this.turn, Int32Array.from(board))
 
+			// console.log(this.turn, Int32Array.from(board))
+
 			resolve({ x0: res.x0, y0: res.y0, x1: res.x1, y1: res.y1 })
 
 		})
@@ -18,3 +20,5 @@ export class PlainBot extends Bot {
 }
 
 Bot.register("plain bot", PlainBot)
+
+window["log"] = console.log

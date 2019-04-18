@@ -460,26 +460,46 @@ export class Grid extends Actor {
 			const b = PieceType.Black
 			const e: undefined = undefined
 
-			// const board = [
-			// 	e, b, b, b, b, b, b, e,
-			// 	w, e, e, e, e, e, e, w,
-			// 	w, e, e, e, e, e, e, w,
-			// 	w, e, e, e, e, e, e, w,
-			// 	w, e, e, e, e, e, e, w,
-			// 	w, e, e, e, e, e, e, w,
-			// 	w, e, e, e, e, e, e, w,
-			// 	e, b, b, b, b, b, b, e,
-			// ]
 			const board = [
-				e, e, e, e, e, e, e, e,
-				e, e, e, e, e, e, e, e,
-				e, e, e, w, e, b, w, e,
-				b, b, e, e, e, e, e, w,
-				e, e, w, e, e, e, e, w,
-				e, e, e, e, b, e, e, w,
-				w, e, e, e, e, w, e, e,
-				e, e, b, e, w, e, e, w,
+				e, b, b, b, b, b, b, e,
+				w, e, e, e, e, e, e, w,
+				w, e, e, e, e, e, e, w,
+				w, e, e, e, e, e, e, w,
+				w, e, e, e, e, e, e, w,
+				w, e, e, e, e, e, e, w,
+				w, e, e, e, e, e, e, w,
+				e, b, b, b, b, b, b, e,
 			]
+			// const board = [
+			// 	e, e, e, e, e, e, e, e,
+			// 	e, e, e, e, e, e, e, e,
+			// 	e, e, e, w, e, b, w, e,
+			// 	b, b, e, e, e, e, e, w,
+			// 	e, e, w, e, e, e, e, w,
+			// 	e, e, e, e, b, e, e, w,
+			// 	w, e, e, e, e, w, e, e,
+			// 	e, e, b, e, w, e, e, w,
+			// ]
+			// const board = [
+			// 	e, e, e, e, e, e, e, e,
+			// 	e, e, e, e, e, e, e, e,
+			// 	e, e, e, b, e, e, e, e,
+			// 	b, e, e, e, e, e, b, e,
+			// 	e, e, e, b, e, e, e, w,
+			// 	e, e, e, b, e, e, e, e,
+			// 	e, e, e, e, w, e, e, e,
+			// 	w, e, e, e, e, e, e, b,
+			// ]
+			// const board = [
+			// 	e, e, e, e, e, e, e, e,
+			// 	e, e, e, e, e, e, e, e,
+			// 	e, e, e, w, e, e, e, e,
+			// 	e, e, e, e, e, e, e, e,
+			// 	e, w, e, e, e, w, e, e,
+			// 	e, e, e, e, w, b, e, e,
+			// 	e, e, e, e, e, e, e, b,
+			// 	e, e, e, b, e, e, e, b,
+			// ]
 
 			for (let i = 0; i != Dim; ++i) {
 				for (let j = 0; j != Dim; ++j) {
