@@ -9,28 +9,6 @@ use wbg_rand::{wasm_rng, Rng, WasmRng};
 use std::ops::{Generator, GeneratorState};
 use std::pin::Pin;
 
-struct FakeRng {
-    curr: i32,
-    list: Vec<f32>,
-}
-
-impl FakeRng {
-    fn gen(&mut self) -> f32 {
-        self.curr += 1;
-        let id = self.curr % self.list.len() as i32;
-        self.list[id as usize]
-    }
-    fn new(n: i32) -> Self {
-        let mut list: Vec<f32> = vec![];
-        for _i in 0..n {
-            list.push(0.5f32);
-        }
-        FakeRng { curr: 0, list }
-    }
-}
-
-type RngProvider = WasmRng;
-
 #[wasm_bindgen]
 #[derive(Debug, Clone)]
 pub struct Move {
@@ -55,9 +33,40 @@ const C: f32 = 1.414f32 * 3e-1;
 // const MAX_STEP: usize = 512;
 // const MAX_NODE: usize = 128;
 const MAX_STEP: usize = 256;
-const MAX_NODE: usize = 512;
+const MAX_NODE: usize = 2048;
 
 const EMPTY_MOVE: (i32, i32) = (100, 100);
+
+const RNG_PHASE: u32 = 8;
+const RNG_SHAMT: u32 = 8;
+const RNG_MASK: u32 = (1u32 << RNG_SHAMT) - 1;
+
+struct MyRng {
+    curr: u64,
+    phase: u32,
+    rng: WasmRng,
+}
+
+impl MyRng {
+    fn next_u32(&mut self) -> u32 {
+        if self.phase == 0 {
+            self.curr = self.rng.next_u64();
+        }
+        self.phase = (self.phase + 1) & (RNG_PHASE - 1);
+        let val = self.curr as u32 & RNG_MASK;
+        self.curr >>= RNG_SHAMT;
+        val
+    }
+    fn new() -> Self {
+        MyRng {
+            curr: 0,
+            phase: 0,
+            rng: wasm_rng(),
+        }
+    }
+}
+
+type RngProvider = MyRng;
 
 struct DisjointSet {
     pre: [i32; 64],
@@ -68,18 +77,32 @@ impl DisjointSet {
         a = self.get(a);
         b = self.get(b);
         if a != b {
-            self.pre[b as usize] = a;
+            unsafe {
+                *self.pre.get_unchecked_mut(b as usize) = a;
+            }
         }
     }
     fn get(&mut self, mut a: i32) -> i32 {
-        while self.pre[a as usize] != -1 {
-            a = self.pre[a as usize]
+        unsafe {
+            let mut k = a;
+            while *self.pre.get_unchecked_mut(a as usize) != -1 {
+                a = *self.pre.get_unchecked_mut(a as usize)
+            }
+            while k != a {
+                let j = *self.pre.get_unchecked_mut(k as usize);
+                *self.pre.get_unchecked_mut(k as usize) = a;
+                k = j;
+            }
         }
         a
     }
-    fn is_joint(&mut self, v: &Vec<i32>) -> bool {
-        let u: Vec<i32> = v.iter().map(|x| self.get(*x)).collect();
-        u.iter().all(|x| *x == u[0])
+    fn is_joint(&mut self, iter: impl Iterator<Item = i32>) -> bool {
+        let mut u = iter.map(|x| self.get(x));
+        if let Some(e) = u.next() {
+            u.all(|x| x == e)
+        } else {
+            true
+        }
     }
 }
 
@@ -126,10 +149,7 @@ impl Board for [u64; 2] {
                 return true;
             }
             let mut set = DisjointSet { pre: [-1; 64] };
-            let my: Vec<i32> = (0..64)
-                .filter(|pos| (self[id] & pos.to_piece()) != 0)
-                .collect();
-            for pos in my.iter() {
+            for pos in (0..64).filter(|pos| (self[id] & pos.to_piece()) != 0) {
                 let mut flag = false;
                 let (x0, y0) = pos.to_coord_2d();
                 for (dx, dy) in dxdy.iter() {
@@ -138,7 +158,7 @@ impl Board for [u64; 2] {
                         let p = (x1, y1).to_coord();
                         if (self[id] & p.to_piece()) != 0 {
                             flag = true;
-                            set.join(*pos, p);
+                            set.join(pos, p);
                         }
                     }
                 }
@@ -146,7 +166,7 @@ impl Board for [u64; 2] {
                     return false;
                 }
             }
-            set.is_joint(&my)
+            set.is_joint((0..64).filter(|pos| (self[id] & pos.to_piece()) != 0))
         };
 
         let win = check(0);
@@ -160,23 +180,24 @@ impl Board for [u64; 2] {
     }
     fn gen_rand_move(&self, turn: i32, rng: &mut RngProvider) -> (i32, i32) {
 
-        let mut all_moves = gen_all_moves(&self, turn);
-        let mut v: Vec<(i32, i32)> = vec![];
+        let rn: i32 = rng.next_u32() as i32 & 0x3fi32;
+        let b = self[turn as usize];
 
-        while let GeneratorState::Yielded((src, dst)) = Pin::new(&mut all_moves).resume() {
-            v.push((src, dst))
+        // random piece from rn
+        for i in (rn..64).filter(|i| (i.to_piece() & b) != 0) {
+            let mut moves = gen_moves(&self, turn, i);
+            if let GeneratorState::Yielded(dst) = Pin::new(&mut moves).resume() {
+                return (i, dst);
+            }
+        }
+        for i in (0..rn).filter(|i| (i.to_piece() & b) != 0) {
+            let mut moves = gen_moves(&self, turn, i);
+            if let GeneratorState::Yielded(dst) = Pin::new(&mut moves).resume() {
+                return (i, dst);
+            }
         }
 
-        let len = v.len() as i32;
-
-        if len > 0 {
-            let rn: f32 = rng.gen();
-            let rid = (len as f32 * rn).floor();
-            v[rid as usize]
-        } else {
-            EMPTY_MOVE
-        }
-
+        EMPTY_MOVE
     }
 }
 
@@ -595,7 +616,7 @@ fn mcts_search_pass(
 pub fn my_plain_solution(turn: i32, sparse: &[i32]) -> Move {
 
     let board = <[u64; 2]>::from_sparse_board(sparse, turn);
-    let mut rng = wasm_rng();
+    let mut rng = MyRng::new();
     // let mut rng = FakeRng::new(1024);
     let mut root = SearchNode {
         curr_move: EMPTY_MOVE,
