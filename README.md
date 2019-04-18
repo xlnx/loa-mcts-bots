@@ -48,11 +48,22 @@ board = [
 
 # Bot部署
 
-* 在`src/bots`中新建`MyBot`类。
-* 在`src/gamelogic`中修改`BotProvider = MyBot`。
+* 在`src/bots`中新建`MyBot`类，继承`Bot`。
+* 在`src/bots/mybot`末尾添加`Bot.register("my bot", MyBot)`。
+* 在`src/index`中`import "./src/bots/mybot`。
 
 # Bot调试
 
 * 在Bot输出非法棋步时会判定对方胜利。
 * 在`console`中可查看双方棋步，非法棋步会标记为红色。
+
+# My MCTS Impl
+
+## 编译
+
+```bash
+$ cargo install wasm-pack # 需要 nightly版本工具链 和 wasm32-unknown-unknown
+$ yarn build-rs
+$ yarn start
+```
 
