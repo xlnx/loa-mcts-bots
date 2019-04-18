@@ -8,6 +8,7 @@
     "clean": "npm cache clear && rimraf -- dist",
     "start": "npm run server:dev",
     "build-rs": "wasm-pack build --release",
+    "build-rs-debug": "wasm-pack build --debug",
     "server": "npm run server:dev",
     "server:dev": "webpack-dev-server --config ./webpack.config.js --inline --progress"
   },

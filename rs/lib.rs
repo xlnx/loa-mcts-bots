@@ -50,10 +50,11 @@ const ROW: u64 = 0xFFu64;
 const COL: u64 = 0x0101010101010101u64;
 const SLASH0: u64 = 0x0102040810204080u64;
 const SLASH1: u64 = 0x8040201008040201u64;
+const C: f32 = 1.414f32 * 3e-1;
 
 // const MAX_STEP: usize = 512;
 // const MAX_NODE: usize = 128;
-const MAX_STEP: usize = 512;
+const MAX_STEP: usize = 256;
 const MAX_NODE: usize = 512;
 
 const EMPTY_MOVE: (i32, i32) = (100, 100);
@@ -96,7 +97,7 @@ impl Board for [u64; 2] {
             for j in 0..8 {
                 let id = sparse[j + i * 8];
                 if id >= 0 {
-                    board[id as usize] |= 1u64 << (j + 8 * i);
+                    board[id as usize] |= 1u64.overflowing_shl((j + 8 * i) as u32).0;
                 }
             }
         }
@@ -188,13 +189,13 @@ trait Coord {
 
 impl Coord for i32 {
     fn to_coord_2d(self) -> (i32, i32) {
-        (self & 0x7, self >> 3)
+        (self & 0x7, self.overflowing_shr(3).0)
     }
     fn to_piece(self) -> u64 {
-        1u64 << self
+        1u64.overflowing_shl(self as u32).0
     }
     fn higher_eq(self) -> u64 {
-        -(self.to_piece() as i64) as u64
+        (self.to_piece() as i64).overflowing_neg().0 as u64
     }
     fn lower_eq(self) -> u64 {
         !self.higher_eq() | self.to_piece()
@@ -207,7 +208,7 @@ trait Coord2D {
 
 impl Coord2D for (i32, i32) {
     fn to_coord(self) -> i32 {
-        self.0 | (self.1 << 3)
+        self.0 | (self.1.overflowing_shl(3).0)
     }
 }
 
@@ -229,11 +230,11 @@ fn gen_moves<'a>(
         let oppo = board[(1 - turn) as usize];
 
         {
-            let col = COL << x;
+            let col = COL.overflowing_shl(x as u32).0;
             let col_cnt = (tot & col).count_ones() as i32;
 
-            let top = pos + (col_cnt << 3);
-            let bottom = pos - (col_cnt << 3);
+            let top = pos + (col_cnt.overflowing_shl(3).0);
+            let bottom = pos - (col_cnt.overflowing_shl(3).0);
             if top < 64 && check(top) {
                 if (!(top.higher_eq() | pos.lower_eq()) & col & oppo) == 0 {
                     yield top;
@@ -246,7 +247,7 @@ fn gen_moves<'a>(
             }
         }
         {
-            let row = ROW << (y << 3);
+            let row = ROW.overflowing_shl(y.overflowing_shl(3).0 as u32).0;
             let row_cnt = (tot & row).count_ones() as i32;
 
             let left = pos + row_cnt;
@@ -265,9 +266,13 @@ fn gen_moves<'a>(
         {
             let pl = x + y;
             let slash = if pl < 7 {
-                SLASH0 >> ((7 - pl) << 3)
+                SLASH0
+                    .overflowing_shr((7 - pl).overflowing_shl(3).0 as u32)
+                    .0
             } else {
-                SLASH0 << ((pl - 7) << 3)
+                SLASH0
+                    .overflowing_shl((pl - 7).overflowing_shl(3).0 as u32)
+                    .0
             };
             let slash_cnt = (tot & slash).count_ones() as i32;
 
@@ -287,9 +292,9 @@ fn gen_moves<'a>(
         {
             let pl = x - y;
             let slash = if pl > 0 {
-                SLASH1 >> (pl << 3)
+                SLASH1.overflowing_shr(pl.overflowing_shl(3).0 as u32).0
             } else {
-                SLASH1 << (-pl << 3)
+                SLASH1.overflowing_shl(-pl.overflowing_shl(3).0 as u32).0
             };
             let slash_cnt = (tot & slash).count_ones() as i32;
 
@@ -366,7 +371,7 @@ impl SearchNode {
                     if child.data.is_some() {
                         let (.., a1, b1) = child.data.as_ref().unwrap();
 
-                        let fact = 1f32 - a1 / b1 + 1.414f32 * 1e-1 * (b0.ln() / b1).sqrt();
+                        let fact = 1f32 - a1 / b1 + C * (b0.ln() / b1).sqrt();
 
                         if fact > max_fact {
                             max_fact = fact;
