@@ -35,13 +35,13 @@ const ROW: u64 = 0xFFu64;
 const COL: u64 = 0x0101010101010101u64;
 const SLASH0: u64 = 0x0102040810204080u64;
 const SLASH1: u64 = 0x8040201008040201u64;
-const C: f32 = 1.414f32 * 3e-1;
+const C: f32 = 1.414f32 * 1e0; //3e-1;
 
 const RM_LEFT: u64 = !0x8080808080808080u64;
 const RM_RIGHT: u64 = !0x0101010101010101u64;
 
-const MAX_STEP: usize = 256;
-const MAX_NODE: usize = 32768;
+const MAX_STEP: usize = 64;
+const MAX_NODE: usize = 65536; //32768;
 
 const EMPTY_MOVE: (i32, i32) = (100, 100);
 
@@ -402,7 +402,10 @@ impl Board for [u64; 2] {
         }
     }
     fn apply_move(&self, src: i32, dst: i32) -> Self {
-        [self[1], self[0] & !src.to_piece() | dst.to_piece()]
+        [
+            self[1] & !dst.to_piece(),
+            self[0] & !src.to_piece() | dst.to_piece(),
+        ]
     }
     fn is_win_state(&self) -> Option<bool> {
 
@@ -1015,6 +1018,16 @@ pub fn my_plain_solution(turn: i32, sparse: &[i32]) -> Move {
         min_simulate_depth = min_simulate_depth.min(simulate_depth);
     }
 
+    if let Ok(value) = JsValue::from_serde(&root) {
+        log_tree(&value);
+    } else {
+        log("failed to serilize");
+    }
+
+    if let Some((.., a, b)) = root.data {
+        log(&format!("{} estimated win rate", a / b));
+    }
+
     log(&format!("{} hits of {}", hit_cnt, all));
     log(&format!("{} term expansion of {}", expand_term_cnt, all));
 
@@ -1031,12 +1044,6 @@ pub fn my_plain_solution(turn: i32, sparse: &[i32]) -> Move {
     ));
     log(&format!("{} max simulate depth", max_simulate_depth));
     log(&format!("{} min simulate depth", min_simulate_depth));
-
-    // if let Ok(value) = JsValue::from_serde(&root) {
-    //     log_tree(&value);
-    // } else {
-    //     log("failed to serilize");
-    // }
 
     unsafe {
         if let Some(ptr) = root.find_max() {
