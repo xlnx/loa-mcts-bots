@@ -37,10 +37,11 @@ const SLASH0: u64 = 0x0102040810204080u64;
 const SLASH1: u64 = 0x8040201008040201u64;
 const C: f32 = 1.414f32 * 3e-1;
 
-// const MAX_STEP: usize = 512;
-// const MAX_NODE: usize = 128;
+const RM_LEFT: u64 = !0x8080808080808080u64;
+const RM_RIGHT: u64 = !0x0101010101010101u64;
+
 const MAX_STEP: usize = 256;
-const MAX_NODE: usize = 8196;
+const MAX_NODE: usize = 32768;
 
 const EMPTY_MOVE: (i32, i32) = (100, 100);
 
@@ -365,42 +366,14 @@ impl<T: U64Rng> MyRng<T> {
 
 type RngProvider = MyRng<FakeRng>;
 
-struct DisjointSet {
-    pre: [i32; 64],
+trait BitBoard {
+    fn eight_conn_expand(self) -> Self;
 }
 
-impl DisjointSet {
-    // #[inline(never)]
-    fn join(&mut self, mut a: i32, mut b: i32) {
-        a = self.get(a);
-        b = self.get(b);
-        if a != b {
-            unsafe {
-                *self.pre.get_unchecked_mut(b as usize) = a;
-            }
-        }
-    }
-    fn get(&mut self, mut a: i32) -> i32 {
-        unsafe {
-            let mut k = a;
-            while *self.pre.get_unchecked_mut(a as usize) != -1 {
-                a = *self.pre.get_unchecked_mut(a as usize)
-            }
-            while k != a {
-                let j = *self.pre.get_unchecked_mut(k as usize);
-                *self.pre.get_unchecked_mut(k as usize) = a;
-                k = j;
-            }
-        }
-        a
-    }
-    fn is_joint(&mut self, iter: impl Iterator<Item = i32>) -> bool {
-        let mut u = iter.map(|x| self.get(x));
-        if let Some(e) = u.next() {
-            u.all(|x| x == e)
-        } else {
-            true
-        }
+impl BitBoard for u64 {
+    fn eight_conn_expand(self) -> Self {
+        let line = self | self.overflowing_shl(8).0 | self.overflowing_shr(8).0;
+        line | (line & RM_LEFT).overflowing_shl(1).0 | (line & RM_RIGHT).overflowing_shr(1).0
     }
 }
 
@@ -432,46 +405,33 @@ impl Board for [u64; 2] {
         [self[1], self[0] & !src.to_piece() | dst.to_piece()]
     }
     fn is_win_state(&self) -> Option<bool> {
-        let dxdy = [
-            (1, 0),
-            (-1, 0),
-            (0, 1),
-            (0, -1),
-            (1, 1),
-            (1, -1),
-            (-1, -1),
-            (-1, 1),
-        ];
-        let check = |id: usize| -> bool {
-            unsafe {
-                if self[1 - id].count_ones() == 1 {
-                    return true;
-                }
 
-                let mut set = DisjointSet {
-                    pre: [-1; 64], // mem::uninitialized(),
-                };
-                // for pos in (0..64).filter(|pos| (self[id] & pos.to_piece()) != 0) {
-                //     set.pre[pos as usize] = -1;
-                // }
-                for pos in (0..64).filter(|pos| (self[id] & pos.to_piece()) != 0) {
-                    let mut flag = false;
-                    let (x0, y0) = pos.to_coord_2d();
-                    for (dx, dy) in dxdy.iter() {
-                        let (x1, y1) = (x0 + dx, y0 + dy);
-                        if x1 >= 0 && y1 >= 0 && x1 < 8 && y1 < 8 {
-                            let p = (x1, y1).to_coord();
-                            if (self[id] & p.to_piece()) != 0 {
-                                flag = true;
-                                set.join(pos, p);
-                            }
-                        }
-                    }
-                    if !flag {
-                        return false;
-                    }
+        let check = |id: usize| -> bool {
+            if self[1 - id].count_ones() == 1 {
+                return true;
+            }
+            let now = self[id];
+            let mut conn: u64 = 0;
+
+            for pos in 0..64 {
+                if (now & pos.to_piece()) != 0 {
+                    // pieces.push(pos);
+                    conn = pos.to_piece();
+                    break;
                 }
-                set.is_joint((0..64).filter(|pos| (self[id] & pos.to_piece()) != 0))
+            }
+
+            if conn != 0 {
+                loop {
+                    let new_conn = now & conn.eight_conn_expand();
+                    if new_conn == conn {
+                        break;
+                    }
+                    conn = now & new_conn;
+                }
+                conn == now
+            } else {
+                false
             }
         };
 
