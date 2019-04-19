@@ -23,13 +23,6 @@ export class MenuButton extends Actor {
 
 		this.opacity = 0.6
 
-		// this.scale.setTo(Util.clamp(Config.Scale.x, 0, 1),
-		// 	Util.clamp(Config.Scale.y, 0, 1))
-
-		// this.anchor.setTo(.5, .7)
-
-		// this.addDrawing(sprite)
-
 		this.off("pointerup", action)
 		this.on("pointerup", action)
 
@@ -57,11 +50,6 @@ export class MainMenu extends Actor {
 		this.logo = new Actor(this.x, this.getTop() - MainMenu.LogoPos.y - 50)
 		this.logo.anchor.setTo(.5, .5)
 		this.logo.addDrawing(Resources.LogoTexture.asSprite())
-		// this.logo.currentDrawing.scale.setTo(
-		// 	0.7 * Config.Scale.x, 0.7 * Config.Scale.y)
-		// this.logo.currentDrawing.
-
-		// Game.add(this.logo)
 
 		Game.add(new MenuButton("Start",
 			() => GameLogic.start(),
@@ -94,10 +82,6 @@ export class MainMenu extends Actor {
 	update(engine: Engine, delta: number) {
 
 		super.update(engine, delta)
-
-		// const { x, y } = Game.worldToScreenCoordinates(
-		// 	new Vector(UI.Grid.x, UI.Grid.y))
-		// this.x = x; this.y = y
 
 		this.x = UI.Grid.getCenter().x
 		this.y = UI.Grid.getTop() - 130

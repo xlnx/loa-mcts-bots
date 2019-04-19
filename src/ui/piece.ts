@@ -40,9 +40,4 @@ export class Piece extends Actor {
 
 	}
 
-	// draw(ctx: CanvasRenderingContext2D) {
-
-	// 	this.debugDraw(ctx)
-	// }
-
 }
