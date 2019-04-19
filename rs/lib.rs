@@ -11,6 +11,7 @@ use serde::ser::{self, Impossible, Serialize, SerializeMap, SerializeStruct, Ser
 extern crate wbg_rand;
 use wbg_rand::{wasm_rng, Rng, WasmRng};
 
+use std::mem;
 use std::ops::{Generator, GeneratorState};
 use std::pin::Pin;
 
@@ -369,6 +370,7 @@ struct DisjointSet {
 }
 
 impl DisjointSet {
+    // #[inline(never)]
     fn join(&mut self, mut a: i32, mut b: i32) {
         a = self.get(a);
         b = self.get(b);
@@ -441,28 +443,36 @@ impl Board for [u64; 2] {
             (-1, 1),
         ];
         let check = |id: usize| -> bool {
-            if self[1 - id].count_ones() == 1 {
-                return true;
-            }
-            let mut set = DisjointSet { pre: [-1; 64] };
-            for pos in (0..64).filter(|pos| (self[id] & pos.to_piece()) != 0) {
-                let mut flag = false;
-                let (x0, y0) = pos.to_coord_2d();
-                for (dx, dy) in dxdy.iter() {
-                    let (x1, y1) = (x0 + dx, y0 + dy);
-                    if x1 >= 0 && y1 >= 0 && x1 < 8 && y1 < 8 {
-                        let p = (x1, y1).to_coord();
-                        if (self[id] & p.to_piece()) != 0 {
-                            flag = true;
-                            set.join(pos, p);
+            unsafe {
+                if self[1 - id].count_ones() == 1 {
+                    return true;
+                }
+
+                let mut set = DisjointSet {
+                    pre: [-1; 64], // mem::uninitialized(),
+                };
+                // for pos in (0..64).filter(|pos| (self[id] & pos.to_piece()) != 0) {
+                //     set.pre[pos as usize] = -1;
+                // }
+                for pos in (0..64).filter(|pos| (self[id] & pos.to_piece()) != 0) {
+                    let mut flag = false;
+                    let (x0, y0) = pos.to_coord_2d();
+                    for (dx, dy) in dxdy.iter() {
+                        let (x1, y1) = (x0 + dx, y0 + dy);
+                        if x1 >= 0 && y1 >= 0 && x1 < 8 && y1 < 8 {
+                            let p = (x1, y1).to_coord();
+                            if (self[id] & p.to_piece()) != 0 {
+                                flag = true;
+                                set.join(pos, p);
+                            }
                         }
                     }
+                    if !flag {
+                        return false;
+                    }
                 }
-                if !flag {
-                    return false;
-                }
+                set.is_joint((0..64).filter(|pos| (self[id] & pos.to_piece()) != 0))
             }
-            set.is_joint((0..64).filter(|pos| (self[id] & pos.to_piece()) != 0))
         };
 
         let win = check(0);
