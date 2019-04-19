@@ -1,5 +1,6 @@
 import { Bot } from "../glob/bot";
 import { my_plain_solution } from "../../pkg/ai_frontend";
+const treeify = require("treeify")
 
 export class PlainBot extends Bot {
 
@@ -22,3 +23,6 @@ export class PlainBot extends Bot {
 Bot.register("plain bot", PlainBot)
 
 window["log"] = console.log
+window["log_tree"] = (obj: any) => {
+	console.log(treeify.asTree(obj, true))
+}

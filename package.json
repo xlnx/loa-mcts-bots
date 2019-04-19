@@ -15,8 +15,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/node": "^11.13.4",
-    "excalibur": "^0.22.0"
+    "@types/node": "^11.13.5",
+    "excalibur": "^0.22.0",
+    "treeify": "^1.1.0"
   },
   "devDependencies": {
     "awesome-typescript-loader": "^5.2.1",

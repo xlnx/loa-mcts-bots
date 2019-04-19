@@ -3,6 +3,11 @@
 extern crate wasm_bindgen;
 use wasm_bindgen::prelude::*;
 
+#[macro_use]
+extern crate serde_derive;
+extern crate serde;
+use serde::ser::{self, Impossible, Serialize, SerializeMap, SerializeStruct, Serializer};
+
 extern crate wbg_rand;
 use wbg_rand::{wasm_rng, Rng, WasmRng};
 
@@ -22,6 +27,7 @@ pub struct Move {
 extern "C" {
     fn alert(x: &str);
     fn log(x: &str);
+    fn log_tree(x: &JsValue);
 }
 
 const ROW: u64 = 0xFFu64;
@@ -353,13 +359,13 @@ fn gen_all_moves<'a>(
 }
 
 #[derive(Debug)]
-struct SearchNode {
-    curr_move: (i32, i32),
-    data: Option<(SearchNodeData, f32, f32)>,
+pub struct SearchNode {
+    pub curr_move: (i32, i32),
+    pub data: Option<(SearchNodeData, f32, f32)>,
 }
 
 #[derive(Debug)]
-enum SearchNodeData {
+pub enum SearchNodeData {
     Mid {
         curr: i32,
         full: bool,
@@ -369,14 +375,81 @@ enum SearchNodeData {
     Term(bool),
 }
 
+impl Serialize for SearchNode {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        if let Some((ref data, a, b)) = self.data {
+            let mut state = serializer.serialize_struct("node", 3)?;
+            if self.curr_move == EMPTY_MOVE {
+                state.serialize_field("move", "empty");
+            } else {
+                state.serialize_field(
+                    "move",
+                    &format!(
+                        "{:?} -> {:?}",
+                        self.curr_move.0.to_coord_2d(),
+                        self.curr_move.1.to_coord_2d(),
+                    ),
+                );
+            };
+            state.serialize_field("value", &format!("{} / {} = {}", a, b, a as f32 / b as f32));
+            state.serialize_field("detail", &data);
+
+            state.end()
+        } else {
+            serializer.serialize_none()
+        }
+    }
+}
+
+impl Serialize for SearchNodeData {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+
+        match self {
+            SearchNodeData::Mid { ref childs, .. } => {
+                let mut state = serializer.serialize_struct("node", 3)?;
+                state.serialize_field(
+                    "child",
+                    &childs
+                        .iter()
+                        .filter(|x| x.data.is_some())
+                        .collect::<Vec<&SearchNode>>(),
+                );
+                state.end()
+            }
+            SearchNodeData::Term(win) => serializer.serialize_bool(*win),
+        }
+    }
+}
+
+#[derive(Debug)]
+struct MCTSSearchPass {
+    hit: bool,
+    win: bool,
+    expand_term: bool,
+    expand_depth: i32,
+    simulate_depth: i32,
+}
+
 impl SearchNode {
 
-    fn expand(&mut self, board: &[u64; 2], debug: bool) {
+    fn expand(&mut self, board: &[u64; 2], debug: bool) -> bool {
 
         if let None = self.data {
             let (src, dst) = self.curr_move;
             let new_board = board.apply_move(src, dst);
             self.data = Some((SearchNodeData::from(&new_board), 0f32, 0f32));
+        }
+
+        if let Some((SearchNodeData::Term(..), ..)) = self.data {
+            true
+        } else {
+            false
         }
 
     }
@@ -468,7 +541,7 @@ impl SearchNode {
         }
     }
 
-    fn simulate(&self, rng: &mut RngProvider, debug: bool) -> Option<bool> {
+    fn simulate(&self, rng: &mut RngProvider, debug: bool) -> (Option<bool>, i32) {
 
         let (ref data, ..) = self.data.as_ref().unwrap();
 
@@ -488,7 +561,7 @@ impl SearchNode {
                             //     alert(&format!("1> {:?}", win));
                             // }
 
-                            return Some(win ^ ((step & 1) != 0));
+                            return (Some(win ^ ((step & 1) != 0)), step as i32);
                         }
                         _ => {
                             // if debug {
@@ -500,13 +573,13 @@ impl SearchNode {
                         }
                     }
                 }
-                None
+                (None, MAX_STEP as i32)
             }
             SearchNodeData::Term(win) => {
                 // if debug {
                 //     alert(&format!("3> {:?}", *self));
                 // }
-                return Some(*win);
+                return (Some(*win), 0);
             }
         }
     }
@@ -558,14 +631,15 @@ fn mcts_search_pass(
     root: &mut SearchNode,
     board: &[u64; 2],
     rng: &mut RngProvider,
-    mut debug: bool,
-) -> bool {
+    debug: bool,
+) -> MCTSSearchPass {
 
     if debug {
         log(&format!("mcts started"))
     }
 
     let (curr_node, curr_board, mut path) = root.select(board, debug);
+    let expand_depth = path.len() as i32;
 
     let mut winn: bool = false;
     let mut res: bool = false;
@@ -585,13 +659,15 @@ fn mcts_search_pass(
     // debug ||=
     // src == (5, 5).to_coord() && dst == (6, 6).to_coord();
 
-    curr_node.expand(&curr_board, debug);
+    let expand_term = curr_node.expand(&curr_board, debug);
 
     if debug {
         log(&format!("expanded node: {:?}", curr_node))
     }
 
-    if let Some(win) = curr_node.simulate(rng, debug) {
+    let (simulate_res, simulate_depth) = curr_node.simulate(rng, debug);
+
+    if let Some(win) = simulate_res {
         winn = win;
         res = true;
     }
@@ -608,7 +684,13 @@ fn mcts_search_pass(
         winn = !winn;
     }
 
-    res
+    MCTSSearchPass {
+        hit: res,
+        win: !winn,
+        expand_term,
+        expand_depth,
+        simulate_depth,
+    }
 }
 
 
@@ -625,15 +707,65 @@ pub fn my_plain_solution(turn: i32, sparse: &[i32]) -> Move {
 
     // alert(&format!("{:?}", board));
 
-    let mut cnt: i32 = 0;
+    let mut hit_cnt: i32 = 0;
+    let mut expand_term_cnt: i32 = 0;
+
+    let mut total_simulate_depth: i32 = 0;
+    let mut max_simulate_depth: i32 = 0;
+    let mut min_simulate_depth: i32 = MAX_STEP as i32;
+
+    let mut total_expand_depth: i32 = 0;
+    let mut max_expand_depth: i32 = 0;
+    let mut min_expand_depth: i32 = MAX_STEP as i32;
+
     let all = MAX_NODE;
     for _i in 0..all {
-        if mcts_search_pass(&mut root, &board, &mut rng, false) {
-            cnt += 1;
+
+        let MCTSSearchPass {
+            hit,
+            win,
+            expand_term,
+            simulate_depth,
+            expand_depth,
+        } = mcts_search_pass(&mut root, &board, &mut rng, false);
+        if hit {
+            hit_cnt += 1;
         }
+        if expand_term {
+            expand_term_cnt += 1;
+        }
+
+        total_expand_depth += expand_depth;
+        max_expand_depth = max_expand_depth.max(expand_depth);
+        min_expand_depth = min_expand_depth.min(expand_depth);
+
+        total_simulate_depth += simulate_depth;
+        max_simulate_depth = max_simulate_depth.max(simulate_depth);
+        min_simulate_depth = min_simulate_depth.min(simulate_depth);
     }
 
-    log(&format!("{} hits of {}", cnt, all));
+    log(&format!("{} hits of {}", hit_cnt, all));
+    log(&format!("{} term expansion of {}", expand_term_cnt, all));
+
+    log(&format!(
+        "{} average expand depth",
+        total_expand_depth as f32 / all as f32
+    ));
+    log(&format!("{} max expand depth", max_expand_depth));
+    log(&format!("{} min expand depth", min_expand_depth));
+
+    log(&format!(
+        "{} average simulate depth",
+        total_simulate_depth as f32 / all as f32
+    ));
+    log(&format!("{} max simulate depth", max_simulate_depth));
+    log(&format!("{} min simulate depth", min_simulate_depth));
+
+    // if let Ok(value) = JsValue::from_serde(&root) {
+    //     log_tree(&value);
+    // } else {
+    //     log("failed to serilize");
+    // }
 
     unsafe {
         if let Some(ptr) = root.find_max() {

@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@types/node@^11.13.4":
-  version "11.13.4"
-  resolved "http://registry.npm.taobao.org/@types/node/download/@types/node-11.13.4.tgz#f83ec3c3e05b174b7241fadeb6688267fe5b22ca"
-  integrity sha1-+D7Dw+BbF0tyQfretmiCZ/5bIso=
+"@types/node@^11.13.5":
+  version "11.13.5"
+  resolved "http://registry.npm.taobao.org/@types/node/download/@types/node-11.13.5.tgz?cache=0&other_urls=http%3A%2F%2Fregistry.npm.taobao.org%2F%40types%2Fnode%2Fdownload%2F%40types%2Fnode-11.13.5.tgz#266564afa8a6a09dc778dfacc703ed3f09c80516"
+  integrity sha1-JmVkr6imoJ3HeN+sxwPtPwnIBRY=
 
 "@webassemblyjs/ast@1.8.5":
   version "1.8.5"
@@ -3854,6 +3854,11 @@ toposort@^1.0.0:
   version "1.0.7"
   resolved "http://registry.npm.taobao.org/toposort/download/toposort-1.0.7.tgz#2e68442d9f64ec720b8cc89e6443ac6caa950029"
   integrity sha1-LmhELZ9k7HILjMieZEOsbKqVACk=
+
+treeify@^1.1.0:
+  version "1.1.0"
+  resolved "http://registry.npm.taobao.org/treeify/download/treeify-1.1.0.tgz#4e31c6a463accd0943879f30667c4fdaff411bb8"
+  integrity sha1-TjHGpGOszQlDh58wZnxP2v9BG7g=
 
 tslib@^1.9.0:
   version "1.9.3"
