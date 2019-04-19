@@ -39,7 +39,7 @@ const C: f32 = 1.414f32 * 3e-1;
 // const MAX_STEP: usize = 512;
 // const MAX_NODE: usize = 128;
 const MAX_STEP: usize = 256;
-const MAX_NODE: usize = 8192;
+const MAX_NODE: usize = 8196;
 
 const EMPTY_MOVE: (i32, i32) = (100, 100);
 
