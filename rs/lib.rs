@@ -35,13 +35,14 @@ const ROW: u64 = 0xFFu64;
 const COL: u64 = 0x0101010101010101u64;
 const SLASH0: u64 = 0x0102040810204080u64;
 const SLASH1: u64 = 0x8040201008040201u64;
-const C: f32 = 1.414f32 * 3e-1;
+const C: f32 = 1.414f32 * 1e0; // * 3e-1;
 
 const RM_LEFT: u64 = !0x8080808080808080u64;
 const RM_RIGHT: u64 = !0x0101010101010101u64;
 
-const MAX_STEP: usize = 64;
-const MAX_NODE: usize = 131072; //32768;
+const MAX_STEP: usize = 32;
+const MAX_NODE: usize = 20000; //131072; //32768;
+const SIMULATE_COUNT: u32 = 32;
 
 const EMPTY_MOVE: (i32, i32) = (100, 100);
 
@@ -936,23 +937,22 @@ fn mcts_search_pass(
                         // one child lose, father win
                         node.data = Some((SearchNodeData::Term(win), *b, *b));
                     } else {
-                        break;
-                        // if let SearchNodeData::Mid { ref childs, .. } = data {
-                        //     if childs.iter().all(|child| {
-                        //         if let Some((SearchNodeData::Term(true), ..), ..) = child.data {
-                        //             true
-                        //         } else {
-                        //             false
-                        //         }
-                        //     }) {
-                        //         // all child win, father lose
-                        //         node.data = Some((SearchNodeData::Term(win), 0f32, *b));
-                        //         // no this node is not affected
-                        //         break;
-                        //     }
-                        // } else {
-                        //     panic!();
-                        // }
+                        if let SearchNodeData::Mid { ref childs, .. } = data {
+                            if childs.iter().all(|child| {
+                                if let Some((SearchNodeData::Term(true), ..), ..) = child.data {
+                                    true
+                                } else {
+                                    false
+                                }
+                            }) {
+                                // all child win, father lose
+                                node.data = Some((SearchNodeData::Term(win), 0f32, *b));
+                                // no this node is not affected
+                                break;
+                            }
+                        } else {
+                            panic!();
+                        }
                     }
                 }
             } else {
@@ -964,12 +964,17 @@ fn mcts_search_pass(
             log(&format!("expanded node: {:?}", curr_node))
         }
 
-        let (simulate_res, simulate_dep) = curr_node.simulate(rng, debug);
-        simulate_depth = simulate_dep;
-
-        if let Some(win) = simulate_res {
-            winn = win;
-            res = true;
+        for i in 0..SIMULATE_COUNT {
+            let (simulate_res, simulate_dep) = curr_node.simulate(rng, debug);
+            simulate_depth += simulate_dep;
+            if let Some(win) = simulate_res {
+                winn = win;
+                res = true;
+            }
+            for node in path.iter_mut().rev() {
+                node.back_propagate(winn);
+                winn = !winn;
+            }
         }
 
         if debug {
@@ -983,11 +988,6 @@ fn mcts_search_pass(
         if debug {
             log(&format!("failed to select"))
         }
-    }
-
-    for node in path.iter_mut().rev() {
-        node.back_propagate(winn);
-        winn = !winn;
     }
 
     MCTSSearchPass {
@@ -1050,11 +1050,11 @@ pub fn my_plain_solution(turn: i32, sparse: &[i32]) -> Move {
         min_simulate_depth = min_simulate_depth.min(simulate_depth);
     }
 
-    // if let Ok(value) = JsValue::from_serde(&root) {
-    //     log_tree(&value);
-    // } else {
-    //     log("failed to serilize");
-    // }
+    if let Ok(value) = JsValue::from_serde(&root) {
+        log_tree(&value);
+    } else {
+        log("failed to serilize");
+    }
 
     if let Some((.., a, b)) = root.data {
         log(&format!("{} estimated win rate", a / b));
