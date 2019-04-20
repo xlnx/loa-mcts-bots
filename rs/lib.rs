@@ -718,7 +718,7 @@ impl SearchNode {
 
     }
 
-    fn find_max(&mut self) -> Option<*mut SearchNode> {
+    fn find_max(&mut self, bare: bool) -> Option<*mut SearchNode> {
 
         let mut max_node: Option<*mut SearchNode> = None;
         let (ref mut data, _a0, b0) = self.data.as_mut().unwrap();
@@ -729,7 +729,12 @@ impl SearchNode {
                     if child.data.is_some() {
                         let (.., a1, b1) = child.data.as_ref().unwrap();
 
-                        let fact = 1f32 - a1 / b1 + C * (b0.ln() / b1).sqrt();
+                        let fact = 1f32 - a1 / b1
+                            + if bare {
+                                0f32
+                            } else {
+                                C * (b0.ln() / b1).sqrt()
+                            };
 
                         if fact > max_fact {
                             max_fact = fact;
@@ -792,7 +797,7 @@ impl SearchNode {
                         } else {
                             // from this state
                             board_ptr = &*board;
-                            if let Some(new_node_ptr) = (*node_ptr).find_max() {
+                            if let Some(new_node_ptr) = (*node_ptr).find_max(false) {
                                 node_ptr = new_node_ptr;
                             } else {
                                 return (None, path);
@@ -937,22 +942,23 @@ fn mcts_search_pass(
                         // one child lose, father win
                         node.data = Some((SearchNodeData::Term(win), *b, *b));
                     } else {
-                        if let SearchNodeData::Mid { ref childs, .. } = data {
-                            if childs.iter().all(|child| {
-                                if let Some((SearchNodeData::Term(true), ..), ..) = child.data {
-                                    true
-                                } else {
-                                    false
-                                }
-                            }) {
-                                // all child win, father lose
-                                node.data = Some((SearchNodeData::Term(win), 0f32, *b));
-                                // no this node is not affected
-                                break;
-                            }
-                        } else {
-                            panic!();
-                        }
+                        // if let SearchNodeData::Mid { ref childs, .. } = data {
+                        //     if childs.iter().all(|child| {
+                        //         if let Some((SearchNodeData::Term(true), ..), ..) = child.data {
+                        //             true
+                        //         } else {
+                        //             false
+                        //         }
+                        //     }) {
+                        //         // all child win, father lose
+                        //         node.data = Some((SearchNodeData::Term(win), 0f32, *b));
+                        //         // no this node is not affected
+                        //         break;
+                        //     }
+                        // } else {
+                        //     panic!();
+                        // }
+                        break;
                     }
                 }
             } else {
@@ -1050,11 +1056,11 @@ pub fn my_plain_solution(turn: i32, sparse: &[i32]) -> Move {
         min_simulate_depth = min_simulate_depth.min(simulate_depth);
     }
 
-    if let Ok(value) = JsValue::from_serde(&root) {
-        log_tree(&value);
-    } else {
-        log("failed to serilize");
-    }
+    // if let Ok(value) = JsValue::from_serde(&root) {
+    //     log_tree(&value);
+    // } else {
+    //     log("failed to serilize");
+    // }
 
     if let Some((.., a, b)) = root.data {
         log(&format!("{} estimated win rate", a / b));
@@ -1078,7 +1084,7 @@ pub fn my_plain_solution(turn: i32, sparse: &[i32]) -> Move {
     log(&format!("{} min simulate depth", min_simulate_depth));
 
     unsafe {
-        if let Some(ptr) = root.find_max() {
+        if let Some(ptr) = root.find_max(true) {
             let (src, dst) = (*ptr).curr_move;
             let (x0, y0) = src.to_coord_2d();
             let (x1, y1) = dst.to_coord_2d();
