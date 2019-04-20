@@ -40,9 +40,9 @@ const C: f32 = 1.414f32 * 1e0; // * 3e-1;
 const RM_LEFT: u64 = !0x8080808080808080u64;
 const RM_RIGHT: u64 = !0x0101010101010101u64;
 
-const MAX_STEP: usize = 32;
-const MAX_NODE: usize = 20000; //131072; //32768;
-const SIMULATE_COUNT: u32 = 32;
+const MAX_STEP: usize = 24;
+const MAX_NODE: usize = 32768; //131072; //32768;
+const SIMULATE_COUNT: u32 = 16; //32;
 
 const EMPTY_MOVE: (i32, i32) = (100, 100);
 
@@ -724,7 +724,7 @@ impl SearchNode {
         let (ref mut data, _a0, b0) = self.data.as_mut().unwrap();
         match data {
             SearchNodeData::Mid { ref mut childs, .. } => {
-                let mut max_fact = 0f32;
+                let mut max_fact = -1f32;
                 for child in childs.iter_mut() {
                     if child.data.is_some() {
                         let (.., a1, b1) = child.data.as_ref().unwrap();
@@ -911,6 +911,8 @@ fn mcts_search_pass(
         log(&format!("mcts started"))
     }
 
+    // log(&format!("select"));
+
     let (sel_res, mut path) = root.select(board, debug);
     let mut winn: bool = false;
     let mut res: bool = false;
@@ -931,7 +933,7 @@ fn mcts_search_pass(
                 dst.to_coord_2d()
             ))
         }
-
+        // log(&format!("expand"));
         expand_term = curr_node.expand(&curr_board, debug);
         if expand_term {
             if let (SearchNodeData::Term(mut win), ..) = curr_node.data.as_ref().unwrap() {
@@ -971,16 +973,19 @@ fn mcts_search_pass(
         }
 
         for i in 0..SIMULATE_COUNT {
+            // log(&format!("simulate"));
             let (simulate_res, simulate_dep) = curr_node.simulate(rng, debug);
             simulate_depth += simulate_dep;
             if let Some(win) = simulate_res {
                 winn = win;
                 res = true;
             }
+            // log(&format!("back propagate"));
             for node in path.iter_mut().rev() {
                 node.back_propagate(winn);
                 winn = !winn;
             }
+            // log(&format!("back propagate ok"));
         }
 
         if debug {
