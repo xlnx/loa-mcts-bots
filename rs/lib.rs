@@ -928,41 +928,36 @@ fn mcts_search_pass(
 
         expand_term = curr_node.expand(&curr_board, debug);
         if expand_term {
-            let len = path.len();
-            if len >= 3 {
-                if let (SearchNodeData::Term(mut win), ..) = curr_node.data.as_ref().unwrap() {
-                    for node in path.iter_mut().skip(1).rev().skip(1) {
-                        let (data, a, b) = node.data.as_mut().unwrap();
-                        win = !win;
-                        if win {
-                            // one child lose, father win
-                            node.data = Some((SearchNodeData::Term(win), *b, *b));
-                        } else {
-                            if let SearchNodeData::Mid { ref childs, .. } = data {
-                                if childs.iter().all(|child| {
-                                    if let Some((SearchNodeData::Term(true), ..), ..) = child.data {
-                                        true
-                                    } else {
-                                        false
-                                    }
-                                }) {
-                                    // all child win, father lose
-                                    node.data = Some((SearchNodeData::Term(win), 0f32, *b));
-                                } else {
-                                    // no this node is not affected
-                                    break;
-                                }
-                            } else {
-                                panic!();
-                            }
-                        }
-                        // break;
+            if let (SearchNodeData::Term(mut win), ..) = curr_node.data.as_ref().unwrap() {
+                for node in path.iter_mut().skip(1).rev().skip(1) {
+                    let (data, a, b) = node.data.as_mut().unwrap();
+                    win = !win;
+                    if win {
+                        // one child lose, father win
+                        node.data = Some((SearchNodeData::Term(win), *b, *b));
+                    } else {
+                        break;
+                        // if let SearchNodeData::Mid { ref childs, .. } = data {
+                        //     if childs.iter().all(|child| {
+                        //         if let Some((SearchNodeData::Term(true), ..), ..) = child.data {
+                        //             true
+                        //         } else {
+                        //             false
+                        //         }
+                        //     }) {
+                        //         // all child win, father lose
+                        //         node.data = Some((SearchNodeData::Term(win), 0f32, *b));
+                        //         // no this node is not affected
+                        //         break;
+                        //     }
+                        // } else {
+                        //     panic!();
+                        // }
                     }
-                } else {
-                    panic!();
                 }
+            } else {
+                panic!();
             }
-
         }
 
         if debug {

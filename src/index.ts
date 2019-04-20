@@ -16,7 +16,7 @@ Game.start(loader).then(() => {
 
 	const panelHeight = Config.Cell.Height * 8
 
-	const scale = 1.55 - panelHeight / Game.drawHeight
+	const scale = 1.90 - panelHeight / Game.drawHeight
 
 	const background = new Background(Resources.BackgroundTexture)
 	Game.add(background)
